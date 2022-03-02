@@ -56,21 +56,34 @@ public class EducationService {
      */
     @Transactional
     public Education save(Education education) {
-        Education storedEntity;
-        Optional<Education> storedEntityOptional = education.getId() != null
-                ? educationRepository.findById(education.getId())
-                : Optional.empty();
-
-        if (storedEntityOptional.isPresent()) {
-            storedEntity = storedEntityOptional.get();
-            storedEntity.setName(education.getName());
-            storedEntity.setCode(education.getCode());
-        } else {
-            validateNewEntity(education);
-            storedEntity = educationRepository.save(education);
+        if (education.getId() != null) {
+            throw new EntitySaveException(EntitySaveExceptionMessages.NON_EMPTY_IDENTIFIER_SAVE);
         }
 
-        return storedEntity;
+        validateNewEntity(education);
+        return educationRepository.save(education);
+    }
+
+    /**
+     * Обновление данных направления образования.
+     *
+     * @param education Объект сущности направления образования.
+     * @return Результат обновления данных направления образования.
+     */
+    @Transactional
+    public Education update(Education education) {
+        if (education.getId() == null) {
+            throw new EntitySaveException(EntitySaveExceptionMessages.EMPTY_IDENTIFIER_UPDATE);
+        }
+        Optional<Education> storedEntityOptional = educationRepository.findById(education.getId());
+
+        if (storedEntityOptional.isPresent()) {
+            Education storedEntity = storedEntityOptional.get();
+            storedEntity.setName(education.getName());
+            storedEntity.setCode(education.getCode());
+            return storedEntity;
+        }
+        throw new EntityNotFoundException(Education.class, education.getId());
     }
 
     /**
